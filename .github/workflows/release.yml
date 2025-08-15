@@ -1,0 +1,65 @@
+name: Release Build
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            runtime: win-x64
+            output: win-x64
+          - os: ubuntu-latest
+            runtime: linux-x64
+            output: linux-x64
+          - os: macos-latest
+            runtime: osx-arm64
+            output: osx-arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build and publish
+      run: dotnet publish LfsMinio/LfsMinio.csproj -c Release -r ${{ matrix.runtime }} --self-contained -p:PublishSingleFile=true -o ./dist/${{ matrix.output }}
+
+    - name: Create artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: LfsMinio-${{ matrix.output }}
+        path: ./dist/${{ matrix.output }}/*
+
+  create-release-assets:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./artifacts
+
+    - name: Create zip archives
+      run: |
+        cd artifacts
+        for dir in */; do
+          zip -r "${dir%/}.zip" "$dir"
+        done
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: artifacts/*.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
