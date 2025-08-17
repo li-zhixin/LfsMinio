@@ -31,11 +31,11 @@ $version = $releaseInfo.tag_name
 Write-Host "Latest version: $version" -ForegroundColor Green
 
 # Determine architecture and OS
-$arch = if ([Environment]::Is64BitOperatingSystem) { "amd64" } else { "386" }
-$os = "windows"
+$arch = if ([Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" }
+$os = "win"
 
 # Find the appropriate asset
-$assetName = "lfs-minio-$os-$arch"
+$assetName = "LfsMinio-$os-$arch"
 $asset = $releaseInfo.assets | Where-Object { $_.name -like "*$assetName*" }
 
 if (!$asset) {
