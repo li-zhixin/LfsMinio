@@ -42,7 +42,7 @@ curl -fsSL https://raw.githubusercontent.com/CruzLiu/LfsMinio/master/install.sh 
 | Variable | Description                | Example |
 |----------|----------------------------|----------|
 | `LFS_S3_BUCKET` | S3 bucket name (required)  | `my-lfs-bucket` |
-| `LFS_S3_ENDPOINT` | S3-compatible endpoint URL | `https://minio.example.com:9000` |
+| `LFS_S3_ENDPOINT` | S3-compatible endpoint URL | `minio.example.com:9000` |
 | `LFS_S3_ACCESS_KEY` | Access key                 | `minioadmin` |
 | `LFS_S3_SECRET_KEY` | Secret key                 | `minioadmin` |
 | `LFS_S3_SECURE` | Use HTTPS (default: false)    | `true`/`false` |
