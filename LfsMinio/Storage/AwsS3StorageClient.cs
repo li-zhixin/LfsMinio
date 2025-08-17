@@ -15,15 +15,16 @@ public sealed class AwsS3StorageClient(AppOptions opts, ILogger<AwsS3StorageClie
     private readonly TransferUtility _transferUtility = new(CreateClient(opts));
     private readonly long _multipartThreshold = 16 * 1024 * 1024; // 16MB
 
-    public async Task UploadAsync(string oid, Stream content, long size, CancellationToken ct)
+    public async Task UploadAsync(string repo, string oid, Stream content, long size, CancellationToken ct)
     {
+        var objectKey = $"{repo}/{oid}";
         // Use TransferUtility for better handling of large files
         if (size > _multipartThreshold)
         {
             var uploadRequest = new TransferUtilityUploadRequest
             {
                 BucketName = _opts.Bucket!,
-                Key = oid,
+                Key = objectKey,
                 InputStream = content,
                 ContentType = "application/octet-stream",
                 PartSize = 8 * 1024 * 1024 // 8MB parts
@@ -35,7 +36,7 @@ public sealed class AwsS3StorageClient(AppOptions opts, ILogger<AwsS3StorageClie
             var put = new PutObjectRequest
             {
                 BucketName = _opts.Bucket!,
-                Key = oid,
+                Key = objectKey,
                 InputStream = content,
                 ContentType = "application/octet-stream"
             };
@@ -43,12 +44,13 @@ public sealed class AwsS3StorageClient(AppOptions opts, ILogger<AwsS3StorageClie
         }
     }
 
-    public async Task DownloadAsync(string oid, Func<Stream, Task> handleStreamAsync, CancellationToken ct)
+    public async Task DownloadAsync(string repo, string oid, Func<Stream, Task> handleStreamAsync, CancellationToken ct)
     {
+        var objectKey = $"{repo}/{oid}";
         var req = new GetObjectRequest
         {
             BucketName = _opts.Bucket!,
-            Key = oid
+            Key = objectKey
         };
         using var resp = await _s3.GetObjectAsync(req, ct);
         await handleStreamAsync(resp.ResponseStream);

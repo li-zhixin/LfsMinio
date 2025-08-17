@@ -14,7 +14,7 @@ public sealed class TransferService(
 {
     private readonly List<string> _tmpFiles = [];
 
-    public async Task UploadAsync(UploadEvent evt, CancellationToken ct)
+    public async Task UploadAsync(string repo, UploadEvent evt, CancellationToken ct)
     {
         try
         {
@@ -22,7 +22,7 @@ public sealed class TransferService(
             {
                 await using var fs = File.OpenRead(evt.Path);
                 await using var ps = new ProgressStream(fs, responder, evt.Oid, evt.Size);
-                await storage.UploadAsync(evt.Oid, ps, evt.Size, token);
+                await storage.UploadAsync(repo, evt.Oid, ps, evt.Size, token);
             }, ct);
 
             await responder.CompleteOkAsync(evt.Oid, null, ct);
@@ -34,14 +34,14 @@ public sealed class TransferService(
         }
     }
 
-    public async Task DownloadAsync(DownloadEvent evt, CancellationToken ct)
+    public async Task DownloadAsync(string repo, DownloadEvent evt, CancellationToken ct)
     {
         var tmp = Path.Combine(Directory.GetCurrentDirectory(), $".lfs-dl-{Guid.NewGuid():N}");
         try
         {
             await retry.ExecuteAsync(async token =>
             {
-                await storage.DownloadAsync(evt.Oid, async stream =>
+                await storage.DownloadAsync(repo, evt.Oid, async stream =>
                 {
                     await using var ps = new ProgressStream(stream, responder, evt.Oid, evt.Size);
                     await using var of = File.Create(tmp);

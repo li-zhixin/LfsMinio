@@ -47,6 +47,7 @@ curl -fsSL https://raw.githubusercontent.com/li-zhixin/LfsMinio/master/install.s
 | `LFS_S3_SECRET_KEY` | 密钥 | `minioadmin` |
 | `LFS_S3_SECURE` | 使用 HTTPS（默认: false） | `true`/`false` |
 | `AWS_REGION` | AWS 区域 | `us-east-1` |
+| `LFS_REPO_NAME` | 仓库标识符，用于 S3 路径分离 | `my-project` |
 
 #### 传输配置
 
@@ -56,46 +57,94 @@ curl -fsSL https://raw.githubusercontent.com/li-zhixin/LfsMinio/master/install.s
 | `LFS_RETRY_BASE_MS` | 基础重试延迟（毫秒） | `300` |
 | `LFS_RETRY_MAX_MS` | 最大重试延迟（毫秒） | `5000` |
 
+### 命令行参数
+
+所有环境变量都可以通过命令行参数覆盖，参数具有更高优先级：
+
+| 参数 | 环境变量 | 描述 |
+|------|----------|------|
+| `--bucket=<名称>` | `LFS_S3_BUCKET` | S3 存储桶名称 |
+| `--endpoint=<URL>` | `LFS_S3_ENDPOINT` | S3 兼容端点 URL |
+| `--access-key=<密钥>` | `LFS_S3_ACCESS_KEY` | 访问密钥 |
+| `--secret-key=<密钥>` | `LFS_S3_SECRET_KEY` | 密钥 |
+| `--region=<区域>` | `AWS_REGION` | AWS 区域 |
+| `--repo=<名称>` | `LFS_REPO_NAME` | 仓库标识符 |
+| `--secure=<布尔值>` | `LFS_S3_SECURE` | 使用 HTTPS (`true`/`false`) |
+| `--retry-max-attempts=<数量>` | `LFS_RETRY_MAX_ATTEMPTS` | 最大重试次数 |
+| `--retry-base-delay=<毫秒>` | `LFS_RETRY_BASE_MS` | 基础重试延迟 (ms) |
+| `--retry-max-delay=<毫秒>` | `LFS_RETRY_MAX_MS` | 最大重试延迟 (ms) |
+
 ### 存储模式选择
 
-- **MinIO/S3 兼容模式**: 当设置 `LFS_S3_ENDPOINT` 时
-- **AWS S3 模式**: 当 `LFS_S3_ENDPOINT` 为空时（使用 AWS 默认凭证链）
+- **MinIO/S3 兼容模式**: 当设置 `LFS_S3_ENDPOINT` 或 `--endpoint` 时
+- **AWS S3 模式**: 当端点为空时（使用 AWS 默认凭证链）
+
+### 仓库分离
+
+LFS 对象在 S3 中的存储路径格式：`{repo}/{oid}`
+
+- 仓库名称可通过 `LFS_REPO_NAME` 环境变量或 `--repo` 参数设置
+- 参数优先级高于环境变量
+- 如果未提供仓库名称，默认使用 "default"
 
 ## Git LFS 设置
 
 ### 1. 配置 Git LFS 自定义传输
 
+#### 基础设置
 ```bash
-# 设置自定义传输代理
-git -c lfs.customtransfer.lfs-s3.path="LfsMinio.exe" `
-    -c lfs.standalonetransferagent=lfs-s3 `
-    clone https://gitee.com/li_zhixin/lfs-test.git
-    
 git config lfs.customtransfer.lfs-s3.path LfsMinio.exe
 git config lfs.standalonetransferagent lfs-s3
 ```
 
+#### 使用命令行参数
+```bash
+git config lfs.customtransfer.lfs-s3.path LfsMinio.exe
+git config lfs.customtransfer.lfs-s3.args "--repo=my-project --bucket=my-lfs-bucket"
+git config lfs.standalonetransferagent lfs-s3
+```
+
+#### 克隆时设置自定义传输
+```bash
+git -c lfs.customtransfer.lfs-s3.path="LfsMinio.exe" \
+    -c lfs.customtransfer.lfs-s3.args="--repo=my-project" \
+    -c lfs.standalonetransferagent=lfs-s3 \
+    clone https://github.com/user/repo.git
+```
+
 ### 2. 环境配置
 
-#### MinIO 示例
+#### MinIO 示例（环境变量）
 ```bash
 export LFS_S3_BUCKET=my-lfs-bucket
 export LFS_S3_ENDPOINT=minio.example.com:9000
 export LFS_S3_ACCESS_KEY=minioadmin
 export LFS_S3_SECRET_KEY=minioadmin
-export LFS_S3_SECURE=false 
+export LFS_S3_SECURE=false
+export LFS_REPO_NAME=my-project
 ```
 
-#### AWS S3 示例
+#### MinIO 示例（命令行参数）
+```bash
+git config lfs.customtransfer.lfs-s3.args "--bucket=my-lfs-bucket --endpoint=minio.example.com:9000 --access-key=minioadmin --secret-key=minioadmin --secure=false --repo=my-project"
+```
+
+#### AWS S3 示例（环境变量）
 ```bash
 export LFS_S3_BUCKET=my-lfs-bucket
 export AWS_REGION=us-east-1
+export LFS_REPO_NAME=my-project
 # AWS 凭证通过环境变量、IAM 角色或 ~/.aws/credentials
 # 方式 1: 使用 LFS_S3_* 变量
 export LFS_S3_ACCESS_KEY=your-access-key
 export LFS_S3_SECRET_KEY=your-secret-key
 # 方式 2: 使用 AWS 默认凭证链（推荐）
 # 如果使用 IAM 角色或 ~/.aws/credentials，无需额外设置
+```
+
+#### AWS S3 示例（命令行参数）
+```bash
+git config lfs.customtransfer.lfs-s3.args "--bucket=my-lfs-bucket --region=us-east-1 --repo=my-project"
 ```
 
 ### 3. 使用方法

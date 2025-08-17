@@ -26,22 +26,24 @@ public sealed class MinioStorageClient : IStorageClient
             .Build();
     }
 
-    public async Task UploadAsync(string oid, Stream content, long size, CancellationToken ct)
+    public async Task UploadAsync(string repo, string oid, Stream content, long size, CancellationToken ct)
     {
+        var objectKey = $"{repo}/{oid}";
         var put = new PutObjectArgs()
             .WithBucket(_opts.Bucket!)
-            .WithObject(oid)
+            .WithObject(objectKey)
             .WithStreamData(content)
             .WithObjectSize(size)
             .WithContentType("application/octet-stream");
         await _client.PutObjectAsync(put, ct);
     }
 
-    public async Task DownloadAsync(string oid, Func<Stream, Task> handleStreamAsync, CancellationToken ct)
+    public async Task DownloadAsync(string repo, string oid, Func<Stream, Task> handleStreamAsync, CancellationToken ct)
     {
+        var objectKey = $"{repo}/{oid}";
         var get = new GetObjectArgs()
             .WithBucket(_opts.Bucket!)
-            .WithObject(oid)
+            .WithObject(objectKey)
             .WithCallbackStream(s => 
             {
                 // Use synchronous bridge to avoid async void in callback

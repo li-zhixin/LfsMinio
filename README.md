@@ -47,6 +47,7 @@ curl -fsSL https://raw.githubusercontent.com/li-zhixin/LfsMinio/master/install.s
 | `LFS_S3_SECRET_KEY` | Secret key                 | `minioadmin` |
 | `LFS_S3_SECURE` | Use HTTPS (default: false)    | `true`/`false` |
 | `AWS_REGION` | AWS region                 | `us-east-1` |
+| `LFS_REPO_NAME` | Repository identifier for S3 path separation | `my-project` |
 
 #### Transfer Configuration
 
@@ -56,45 +57,94 @@ curl -fsSL https://raw.githubusercontent.com/li-zhixin/LfsMinio/master/install.s
 | `LFS_RETRY_BASE_MS` | Base retry delay (ms) | `300` |
 | `LFS_RETRY_MAX_MS` | Max retry delay (ms) | `5000` |
 
+### Command Line Arguments
+
+All environment variables can be overridden using command line arguments with higher priority:
+
+| Argument | Environment Variable | Description |
+|----------|---------------------|-------------|
+| `--bucket=<name>` | `LFS_S3_BUCKET` | S3 bucket name |
+| `--endpoint=<url>` | `LFS_S3_ENDPOINT` | S3-compatible endpoint URL |
+| `--access-key=<key>` | `LFS_S3_ACCESS_KEY` | Access key |
+| `--secret-key=<key>` | `LFS_S3_SECRET_KEY` | Secret key |
+| `--region=<region>` | `AWS_REGION` | AWS region |
+| `--repo=<name>` | `LFS_REPO_NAME` | Repository identifier |
+| `--secure=<bool>` | `LFS_S3_SECURE` | Use HTTPS (`true`/`false`) |
+| `--retry-max-attempts=<num>` | `LFS_RETRY_MAX_ATTEMPTS` | Max retry attempts |
+| `--retry-base-delay=<ms>` | `LFS_RETRY_BASE_MS` | Base retry delay (ms) |
+| `--retry-max-delay=<ms>` | `LFS_RETRY_MAX_MS` | Max retry delay (ms) |
+
 ### Storage Mode Selection
 
-- **MinIO/S3-Compatible Mode**: When `LFS_S3_ENDPOINT` is set
-- **AWS S3 Mode**: When `LFS_S3_ENDPOINT` is empty (uses AWS default credential chain)
+- **MinIO/S3-Compatible Mode**: When `LFS_S3_ENDPOINT` or `--endpoint` is set
+- **AWS S3 Mode**: When endpoint is empty (uses AWS default credential chain)
+
+### Repository Separation
+
+LFS objects are stored in S3 with the path format: `{repo}/{oid}`
+
+- Repository name can be set via `LFS_REPO_NAME` environment variable or `--repo` argument
+- Arguments take priority over environment variables
+- If no repository name is provided, defaults to "default"
 
 ## Git LFS Setup
 
 ### 1. Configure Git LFS Custom Transfer
 
+#### Basic Setup
 ```bash
-git -c lfs.customtransfer.lfs-s3.path="LfsMinio.exe" `
-    -c lfs.standalonetransferagent=lfs-s3 `
-    clone https://gitee.com/li_zhixin/lfs-test.git
-    
 git config lfs.customtransfer.lfs-s3.path LfsMinio.exe
 git config lfs.standalonetransferagent lfs-s3
 ```
 
+#### With Command Line Arguments
+```bash
+git config lfs.customtransfer.lfs-s3.path LfsMinio.exe
+git config lfs.customtransfer.lfs-s3.args "--repo=my-project --bucket=my-lfs-bucket"
+git config lfs.standalonetransferagent lfs-s3
+```
+
+#### Clone with Custom Transfer
+```bash
+git -c lfs.customtransfer.lfs-s3.path="LfsMinio.exe" \
+    -c lfs.customtransfer.lfs-s3.args="--repo=my-project" \
+    -c lfs.standalonetransferagent=lfs-s3 \
+    clone https://github.com/user/repo.git
+```
+
 ### 2. Environment Setup
 
-#### MinIO Example
+#### MinIO Example (Environment Variables)
 ```bash
 export LFS_S3_BUCKET=my-lfs-bucket
 export LFS_S3_ENDPOINT=minio.example.com:9000
 export LFS_S3_ACCESS_KEY=minioadmin
 export LFS_S3_SECRET_KEY=minioadmin
 export LFS_S3_SECURE=false
+export LFS_REPO_NAME=my-project
 ```
 
-#### AWS S3 Example
+#### MinIO Example (Command Line Arguments)
+```bash
+git config lfs.customtransfer.lfs-s3.args "--bucket=my-lfs-bucket --endpoint=minio.example.com:9000 --access-key=minioadmin --secret-key=minioadmin --secure=false --repo=my-project"
+```
+
+#### AWS S3 Example (Environment Variables)
 ```bash
 export LFS_S3_BUCKET=my-lfs-bucket
 export AWS_REGION=us-east-1
+export LFS_REPO_NAME=my-project
 # AWS credentials via environment, IAM role, or ~/.aws/credentials
 # Option 1: Use LFS_S3_* variables
 export LFS_S3_ACCESS_KEY=your-access-key
 export LFS_S3_SECRET_KEY=your-secret-key
 # Option 2: Use AWS default credential chain (recommended)
 # No additional setup needed if using IAM roles or ~/.aws/credentials
+```
+
+#### AWS S3 Example (Command Line Arguments)
+```bash
+git config lfs.customtransfer.lfs-s3.args "--bucket=my-lfs-bucket --region=us-east-1 --repo=my-project"
 ```
 
 ### 3. Usage

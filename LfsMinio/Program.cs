@@ -36,7 +36,11 @@ public partial class Program
             builder.Services.AddSerilog();
 
         // Options & configuration
-        builder.Services.AddOptions<AppOptions>().Configure(AppOptions.BindFromEnvironment);
+        builder.Services.AddOptions<AppOptions>().Configure(opts => 
+        {
+            AppOptions.BindFromEnvironment(opts);
+            AppOptions.OverrideFromArgs(opts, args);
+        });
 
         // Infrastructure
         builder.Services.AddSingleton<IResponder, LfsResponder>();
@@ -104,11 +108,17 @@ public partial class Program
                 // Ack init
                 await responder.WriteAsync(new InitOkResponse(), cts.Token);
 
+                // Use configured repo name, fallback to "default"
+                var repo = !string.IsNullOrWhiteSpace(options.RepoName) 
+                    ? options.RepoName 
+                    : "default";
+                LogUsingRepositoryRepo(logger, repo);
+
                 // Force concurrency to 1 when init.concurrent is false
                 var concurrency = !init.Concurrent ? 1 : Math.Max(1, init.ConcurrentTransfers > 0 ? init.ConcurrentTransfers : 3);
                 LogStartingTransferLoopWithConcurrencyConcurrency(logger, concurrency);
 
-                var result = await RunLoopAsync(reader, transfers, concurrency, stdin, cts.Token);
+                var result = await RunLoopAsync(reader, transfers, concurrency, repo, stdin, cts.Token);
                 return result;
             }
             else
@@ -145,7 +155,8 @@ public partial class Program
         }
     }
 
-    private static async Task<int> RunLoopAsync(ILfsReader reader,  ITransferService transfers, int concurrency, Stream stdin, CancellationToken token)
+
+    private static async Task<int> RunLoopAsync(ILfsReader reader,  ITransferService transfers, int concurrency, string repo, Stream stdin, CancellationToken token)
     {
         using var sem = new SemaphoreSlim(concurrency, concurrency);
         var tasks = new List<Task>();
@@ -158,7 +169,7 @@ public partial class Program
                     await sem.WaitAsync(token);
                     tasks.Add(Task.Run(async () =>
                     {
-                        try { await transfers.UploadAsync(up, token); }
+                        try { await transfers.UploadAsync(repo, up, token); }
                         finally { sem.Release(); }
                     }, token));
                     break;
@@ -166,7 +177,7 @@ public partial class Program
                     await sem.WaitAsync(token);
                     tasks.Add(Task.Run(async () =>
                     {
-                        try { await transfers.DownloadAsync(down, token); }
+                        try { await transfers.DownloadAsync(repo, down, token); }
                         finally { sem.Release(); }
                     }, token));
                     break;
@@ -187,6 +198,9 @@ public partial class Program
 
     [LoggerMessage(LogLevel.Information, "Using AWS S3 region {region}")]
     static partial void LogUsingAwsS3RegionRegion(ILogger logger, string region);
+
+    [LoggerMessage(LogLevel.Information, "Using repository {repo}")]
+    static partial void LogUsingRepositoryRepo(ILogger<Program> logger, string repo);
 
     [LoggerMessage(LogLevel.Warning, "Received SIGINT, shutting down...")]
     static partial void LogReceivedSigintShuttingDown(ILogger<Program> logger);
