@@ -11,7 +11,10 @@ public interface ILfsReader
 
 public sealed class LfsReader(ILogger<LfsReader> logger) : ILfsReader
 {
-    private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web)
+    {
+        TypeInfoResolver = LfsJsonContext.Default
+    };
 
     public async IAsyncEnumerable<LfsEvent> ReadEventsAsync(Stream input, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
     {

@@ -18,7 +18,10 @@ public interface IResponder
 public sealed class LfsResponder : IResponder
 {
     private readonly ILogger<LfsResponder> _logger;
-    private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web)
+    {
+        TypeInfoResolver = LfsJsonContext.Default
+    };
     private readonly SemaphoreSlim _mutex = new(1, 1);
     private readonly StreamWriter _writer;
 
