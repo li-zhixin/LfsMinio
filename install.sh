@@ -34,15 +34,15 @@ ARCH=""
 
 case "$(uname -s)" in
     Linux*)     OS="linux";;
-    Darwin*)    OS="darwin";;
-    CYGWIN*)    OS="windows";;
-    MINGW*)     OS="windows";;
+    Darwin*)    OS="osx";;
+    CYGWIN*)    OS="win";;
+    MINGW*)     OS="win";;
     *)          echo "Unsupported OS: $(uname -s)"; exit 1;;
 esac
 
 case "$(uname -m)" in
-    x86_64|amd64)   ARCH="amd64";;
-    i386|i686)      ARCH="386";;
+    x86_64|amd64)   ARCH="x64";;
+    i386|i686)      ARCH="x86";;
     aarch64|arm64)  ARCH="arm64";;
     armv7l)         ARCH="arm";;
     *)              echo "Unsupported architecture: $(uname -m)"; exit 1;;
@@ -51,7 +51,7 @@ esac
 echo "Detected platform: $OS-$ARCH"
 
 # Find the appropriate asset
-ASSET_NAME="lfs-minio-$OS-$ARCH"
+ASSET_NAME="LfsMinio-$OS-$ARCH"
 DOWNLOAD_URL=$(echo "$RELEASE_INFO" | grep "browser_download_url" | grep "$ASSET_NAME" | head -n 1 | cut -d '"' -f 4)
 
 if [ -z "$DOWNLOAD_URL" ]; then
