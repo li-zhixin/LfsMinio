@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
@@ -17,8 +16,7 @@ public sealed class LfsReader(ILogger<LfsReader> logger) : ILfsReader
     public async IAsyncEnumerable<LfsEvent> ReadEventsAsync(Stream input, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
     {
         using var reader = new StreamReader(input, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 8192, leaveOpen: true);
-        string? line;
-        while (!ct.IsCancellationRequested && (line = await reader.ReadLineAsync(ct)) != null)
+        while (!ct.IsCancellationRequested && await reader.ReadLineAsync(ct) is { } line)
         {
             if (string.IsNullOrWhiteSpace(line)) continue;
             

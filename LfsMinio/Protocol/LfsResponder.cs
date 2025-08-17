@@ -20,14 +20,13 @@ public sealed class LfsResponder : IResponder
     private readonly ILogger<LfsResponder> _logger;
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
     private readonly SemaphoreSlim _mutex = new(1, 1);
-    private readonly Stream _output;
     private readonly StreamWriter _writer;
 
     public LfsResponder(ILogger<LfsResponder> logger)
     {
         _logger = logger;
-        _output = Console.OpenStandardOutput();
-        _writer = new StreamWriter(_output, new UTF8Encoding(false)) { AutoFlush = true };
+        var output = Console.OpenStandardOutput();
+        _writer = new StreamWriter(output, new UTF8Encoding(false)) { AutoFlush = true };
     }
 
     public async Task WriteAsync(LfsResponse response, CancellationToken ct = default)
@@ -39,7 +38,7 @@ public sealed class LfsResponder : IResponder
             {
                 InitOkResponse => new object(),
                 InitErrorResponse err => new { error = new { code = 1, message = err.Message } },
-                var other => other
+                _ => response
             }, JsonOpts);
 
             _logger.LogDebug("-> {Json}", json);

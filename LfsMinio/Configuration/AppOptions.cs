@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Primitives;
-
 namespace LfsMinio.Configuration;
 
 public sealed class AppOptions
@@ -12,8 +10,6 @@ public sealed class AppOptions
     public bool Secure { get; set; } = true;
     public string? Region { get; set; } // used by AWS
 
-    // Concurrency
-    public int DefaultConcurrentTransfers { get; set; } = 3;
 
     // Retry
     public int RetryMaxAttempts { get; set; } = 4;
@@ -36,8 +32,6 @@ public sealed class AppOptions
         o.Secure = !string.IsNullOrEmpty(secureVar) && secureVar != "0" && secureVar != "false";
         o.Region = Environment.GetEnvironmentVariable("AWS_REGION");
 
-        if (int.TryParse(Environment.GetEnvironmentVariable("LFS_CONCURRENCY"), out var c) && c > 0)
-            o.DefaultConcurrentTransfers = c;
 
         if (int.TryParse(Environment.GetEnvironmentVariable("LFS_RETRY_MAX_ATTEMPTS"), out var r) && r > 0)
             o.RetryMaxAttempts = r;

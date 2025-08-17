@@ -13,26 +13,45 @@ A Git LFS custom transfer agent for MinIO and AWS S3 compatible storage.
 - **Progress Reporting**: Real-time transfer progress with Git LFS protocol compliance
 - **Connection Validation**: Startup connectivity checks to catch configuration issues early
 
+## Installation
+
+### Quick Install
+
+#### Windows (PowerShell)
+```powershell
+iwr -useb https://raw.githubusercontent.com/CruzLiu/LfsMinio/master/install.ps1 | iex
+```
+
+#### Linux/macOS (Bash)
+```bash
+curl -fsSL https://raw.githubusercontent.com/CruzLiu/LfsMinio/master/install.sh | bash
+```
+
+### Manual Installation
+
+1. Download the latest release from [GitHub Releases](https://github.com/CruzLiu/LfsMinio/releases/latest)
+2. Extract to your preferred directory (e.g., `~/.lfs-mirror`)
+3. Add the directory to your system PATH
+
 ## Configuration
 
 ### Environment Variables
 
 #### Storage Configuration
 
-| Variable | Description | Example |
-|----------|-------------|----------|
-| `LFS_S3_BUCKET` | S3 bucket name (required) | `my-lfs-bucket` |
+| Variable | Description                | Example |
+|----------|----------------------------|----------|
+| `LFS_S3_BUCKET` | S3 bucket name (required)  | `my-lfs-bucket` |
 | `LFS_S3_ENDPOINT` | S3-compatible endpoint URL | `https://minio.example.com:9000` |
-| `LFS_S3_ACCESS_KEY` | Access key | `minioadmin` |
-| `LFS_S3_SECRET_KEY` | Secret key | `minioadmin` |
-| `LFS_S3_SECURE` | Use HTTPS (default: true) | `true`/`false` |
-| `AWS_REGION` | AWS region | `us-east-1` |
+| `LFS_S3_ACCESS_KEY` | Access key                 | `minioadmin` |
+| `LFS_S3_SECRET_KEY` | Secret key                 | `minioadmin` |
+| `LFS_S3_SECURE` | Use HTTPS (default: false)    | `true`/`false` |
+| `AWS_REGION` | AWS region                 | `us-east-1` |
 
 #### Transfer Configuration
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `LFS_CONCURRENCY` | Max concurrent transfers | `3` |
 | `LFS_RETRY_MAX_ATTEMPTS` | Max retry attempts | `4` |
 | `LFS_RETRY_BASE_MS` | Base retry delay (ms) | `300` |
 | `LFS_RETRY_MAX_MS` | Max retry delay (ms) | `5000` |
@@ -96,46 +115,7 @@ git push origin main
 dotnet build
 ```
 
-### Production Builds
-
-#### Windows (x64)
-```bash
-dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true
-```
-
-#### Linux (x64)
-```bash
-dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true
-```
-
-#### macOS (ARM64 - Apple Silicon)
-```bash
-dotnet publish -c Release -r osx-arm64 --self-contained -p:PublishSingleFile=true
-```
-
-#### Build All Platforms (Batch Script)
-```bash
-# Windows
-dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o ./dist/win-x64
-
-# Linux
-dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o ./dist/linux-x64
-
-# macOS Apple Silicon
-dotnet publish -c Release -r osx-arm64 --self-contained -p:PublishSingleFile=true -o ./dist/osx-arm64
-```
-
-Built executables will be located in:
-- Windows: `./dist/win-x64/LfsMinio.exe`
-- Linux: `./dist/linux-x64/LfsMinio`
-- macOS (ARM): `./dist/osx-arm64/LfsMinio`
-
 ## Advanced Configuration
-
-### Concurrent Transfers
-```bash
-export LFS_CONCURRENCY=5  # Allow up to 5 parallel transfers
-```
 
 ### Retry Policy
 ```bash

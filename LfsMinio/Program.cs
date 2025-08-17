@@ -8,17 +8,21 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace LfsMinio;
 
-public class Program
+public partial class Program
 {
     public static async Task<int> Main(string[] args)
     {
         // Configure Serilog
+        var executableDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName) ?? AppContext.BaseDirectory;
+        var logPath = Path.Combine(executableDir, "logs", "lfsminio-.log");
+        
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
-            .WriteTo.File("logs/lfsminio-.log", 
+            .WriteTo.File(logPath, 
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 7,
                 outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3}] {Message:lj}{NewLine}{Exception}")
@@ -47,11 +51,11 @@ public class Program
 
             if (!string.IsNullOrWhiteSpace(opts.Endpoint))
             {
-                logger.LogInformation("Using S3-compatible endpoint {Endpoint}", opts.Endpoint);
+                LogUsingS3CompatibleEndpointEndpoint(logger, opts.Endpoint);
                 return new MinioStorageClient(opts, sp.GetRequiredService<ILogger<MinioStorageClient>>());
             }
 
-            logger.LogInformation("Using AWS S3 region {Region}", opts.Region ?? "<default>");
+            LogUsingAwsS3RegionRegion(logger, opts.Region ?? "<default>");
             return new AwsS3StorageClient(opts, sp.GetRequiredService<ILogger<AwsS3StorageClient>>());
         });
 
@@ -70,11 +74,11 @@ public class Program
         var cts = new CancellationTokenSource();
         Console.CancelKeyPress += (_, e) => {
             e.Cancel = true;
-            logger.LogWarning("Received SIGINT, shutting down...");
+            LogReceivedSigintShuttingDown(logger);
             cts.Cancel();
         };
         AppDomain.CurrentDomain.ProcessExit += (_, _) => {
-            logger.LogWarning("Process exit, cleanup...");
+            LogProcessExitCleanup(logger);
             cts.Cancel();
         };
 
@@ -101,20 +105,20 @@ public class Program
                 await responder.WriteAsync(new InitOkResponse(), cts.Token);
 
                 // Force concurrency to 1 when init.concurrent is false
-                var concurrency = !init.Concurrent ? 1 : Math.Max(1, init.ConcurrentTransfers > 0 ? init.ConcurrentTransfers : options.DefaultConcurrentTransfers);
-                logger.LogInformation("Starting transfer loop with concurrency {Concurrency}", concurrency);
+                var concurrency = !init.Concurrent ? 1 : Math.Max(1, init.ConcurrentTransfers > 0 ? init.ConcurrentTransfers : 3);
+                LogStartingTransferLoopWithConcurrencyConcurrency(logger, concurrency);
 
-                var result = await RunLoopAsync(reader, responder, transfers, concurrency, stdin, cts.Token);
+                var result = await RunLoopAsync(reader, transfers, concurrency, stdin, cts.Token);
                 return result;
             }
             else
             {
                 // Ignore any non-init until init is seen
-                logger.LogWarning("Received non-init event before init; ignoring.");
+                LogReceivedNonInitEventBeforeInitIgnoring(logger);
             }
         }
 
-        logger.LogError("No init event received; exiting.");
+        LogNoInitEventReceivedExiting(logger);
         return 1;
         }
         catch (Exception ex)
@@ -124,7 +128,7 @@ public class Program
         }
         finally
         {
-            Log.CloseAndFlush();
+            await Log.CloseAndFlushAsync();
         }
     }
 
@@ -141,7 +145,7 @@ public class Program
         }
     }
 
-    private static async Task<int> RunLoopAsync(ILfsReader reader, IResponder responder, ITransferService transfers, int concurrency, Stream stdin, CancellationToken token)
+    private static async Task<int> RunLoopAsync(ILfsReader reader,  ITransferService transfers, int concurrency, Stream stdin, CancellationToken token)
     {
         using var sem = new SemaphoreSlim(concurrency, concurrency);
         var tasks = new List<Task>();
@@ -177,4 +181,25 @@ public class Program
         await transfers.CleanupAsync(token);
         return 0;
     }
+
+    [LoggerMessage(LogLevel.Information, "Using S3-compatible endpoint {endpoint}")]
+    static partial void LogUsingS3CompatibleEndpointEndpoint(ILogger logger, string endpoint);
+
+    [LoggerMessage(LogLevel.Information, "Using AWS S3 region {region}")]
+    static partial void LogUsingAwsS3RegionRegion(ILogger logger, string region);
+
+    [LoggerMessage(LogLevel.Warning, "Received SIGINT, shutting down...")]
+    static partial void LogReceivedSigintShuttingDown(ILogger<Program> logger);
+
+    [LoggerMessage(LogLevel.Warning, "Process exit, cleanup...")]
+    static partial void LogProcessExitCleanup(ILogger<Program> logger);
+
+    [LoggerMessage(LogLevel.Information, "Starting transfer loop with concurrency {concurrency}")]
+    static partial void LogStartingTransferLoopWithConcurrencyConcurrency(ILogger<Program> logger, int concurrency);
+
+    [LoggerMessage(LogLevel.Warning, "Received non-init event before init; ignoring.")]
+    static partial void LogReceivedNonInitEventBeforeInitIgnoring(ILogger<Program> logger);
+
+    [LoggerMessage(LogLevel.Error, "No init event received; exiting.")]
+    static partial void LogNoInitEventReceivedExiting(ILogger<Program> logger);
 }

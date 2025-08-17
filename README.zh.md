@@ -13,6 +13,26 @@
 - **进度报告**: 实时传输进度，符合 Git LFS 协议规范
 - **连接验证**: 启动时连通性检查，提前发现配置问题
 
+## 安装
+
+### 快速安装
+
+#### Windows (PowerShell)
+```powershell
+iwr -useb https://raw.githubusercontent.com/CruzLiu/LfsMinio/master/install.ps1 | iex
+```
+
+#### Linux/macOS (Bash)
+```bash
+curl -fsSL https://raw.githubusercontent.com/CruzLiu/LfsMinio/master/install.sh | bash
+```
+
+### 手动安装
+
+1. 从 [GitHub Releases](https://github.com/CruzLiu/LfsMinio/releases/latest) 下载最新版本
+2. 解压到您喜欢的目录（例如 `~/.lfs-mirror`）
+3. 将该目录添加到系统 PATH
+
 ## 配置
 
 ### 环境变量
@@ -25,14 +45,13 @@
 | `LFS_S3_ENDPOINT` | S3 兼容端点 URL | `https://minio.example.com:9000` |
 | `LFS_S3_ACCESS_KEY` | 访问密钥 | `minioadmin` |
 | `LFS_S3_SECRET_KEY` | 密钥 | `minioadmin` |
-| `LFS_S3_SECURE` | 使用 HTTPS（默认: true） | `true`/`false` |
+| `LFS_S3_SECURE` | 使用 HTTPS（默认: false） | `true`/`false` |
 | `AWS_REGION` | AWS 区域 | `us-east-1` |
 
 #### 传输配置
 
 | 变量名 | 描述 | 默认值 |
 |--------|------|--------|
-| `LFS_CONCURRENCY` | 最大并发传输数 | `3` |
 | `LFS_RETRY_MAX_ATTEMPTS` | 最大重试次数 | `4` |
 | `LFS_RETRY_BASE_MS` | 基础重试延迟（毫秒） | `300` |
 | `LFS_RETRY_MAX_MS` | 最大重试延迟（毫秒） | `5000` |
@@ -97,46 +116,7 @@ git push origin main
 dotnet build
 ```
 
-### 生产构建
-
-#### Windows (x64)
-```bash
-dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true
-```
-
-#### Linux (x64)
-```bash
-dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true
-```
-
-#### macOS (ARM64 - Apple 芯片)
-```bash
-dotnet publish -c Release -r osx-arm64 --self-contained -p:PublishSingleFile=true
-```
-
-#### 批量构建所有平台
-```bash
-# Windows
-dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o ./dist/win-x64
-
-# Linux
-dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o ./dist/linux-x64
-
-# macOS Apple 芯片
-dotnet publish -c Release -r osx-arm64 --self-contained -p:PublishSingleFile=true -o ./dist/osx-arm64
-```
-
-构建的可执行文件位置：
-- Windows: `./dist/win-x64/LfsMinio.exe`
-- Linux: `./dist/linux-x64/LfsMinio`
-- macOS (ARM): `./dist/osx-arm64/LfsMinio`
-
 ## 高级配置
-
-### 并发传输
-```bash
-export LFS_CONCURRENCY=5  # 允许最多 5 个并行传输
-```
 
 ### 重试策略
 ```bash

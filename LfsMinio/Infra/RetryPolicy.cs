@@ -100,7 +100,7 @@ public sealed class ExponentialBackoffRetryPolicy(Microsoft.Extensions.Options.I
     private static bool IsTransientMinioException(Minio.Exceptions.MinioException ex)
     {
         // Check for network/connection related MinIO errors
-        var message = ex.Message?.ToLowerInvariant() ?? "";
+        var message = ex.Message.ToLowerInvariant() ?? "";
         return message.Contains("timeout") || 
                message.Contains("connection") || 
                message.Contains("network") ||
