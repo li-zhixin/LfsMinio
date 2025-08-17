@@ -95,7 +95,7 @@ esac
 rm -f "$TEMP_FILE"
 
 # Make binary executable
-find "$INSTALL_DIR" -name "lfs-minio*" -type f -exec chmod +x {} \;
+find "$INSTALL_DIR" -name "LfsMinio" -type f -exec chmod +x {} \;
 
 # Add to PATH
 SHELL_RC=""
