@@ -18,7 +18,7 @@ fi
 
 # Get latest release info
 echo "Fetching latest release information..."
-RELEASE_INFO=$(curl -s "https://api.github.com/repos/CruzLiu/LfsMinio/releases/latest")
+RELEASE_INFO=$(curl -s "https://api.github.com/repos/li-zhixin/LfsMinio/releases/latest")
 
 if [ $? -ne 0 ]; then
     echo "Error: Failed to fetch release information"

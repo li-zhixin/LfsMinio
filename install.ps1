@@ -21,7 +21,7 @@ if (!(Test-Path $InstallDir)) {
 # Get latest release info
 Write-Host "Fetching latest release information..." -ForegroundColor Yellow
 try {
-    $releaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/CruzLiu/LfsMinio/releases/latest"
+    $releaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/li-zhixin/LfsMinio/releases/latest"
 } catch {
     Write-Error "Failed to fetch release information: $_"
     exit 1
