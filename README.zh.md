@@ -19,17 +19,17 @@
 
 #### Windows (PowerShell)
 ```powershell
-iwr -useb https://raw.githubusercontent.com/CruzLiu/LfsMinio/master/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/li-zhixin/LfsMinio/master/install.ps1 | iex
 ```
 
 #### Linux/macOS (Bash)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/CruzLiu/LfsMinio/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/li-zhixin/LfsMinio/master/install.sh | bash
 ```
 
 ### 手动安装
 
-1. 从 [GitHub Releases](https://github.com/CruzLiu/LfsMinio/releases/latest) 下载最新版本
+1. 从 [GitHub Releases](https://github.com/li-zhixin/LfsMinio/releases/latest) 下载最新版本
 2. 解压到您喜欢的目录（例如 `~/.lfs-mirror`）
 3. 将该目录添加到系统 PATH
 
@@ -42,7 +42,7 @@ curl -fsSL https://raw.githubusercontent.com/CruzLiu/LfsMinio/master/install.sh 
 | 变量名 | 描述 | 示例值 |
 |--------|------|--------|
 | `LFS_S3_BUCKET` | S3 存储桶名称（必需） | `my-lfs-bucket` |
-| `LFS_S3_ENDPOINT` | S3 兼容端点 URL | `https://minio.example.com:9000` |
+| `LFS_S3_ENDPOINT` | S3 兼容端点 URL | `minio.example.com:9000` |
 | `LFS_S3_ACCESS_KEY` | 访问密钥 | `minioadmin` |
 | `LFS_S3_SECRET_KEY` | 密钥 | `minioadmin` |
 | `LFS_S3_SECURE` | 使用 HTTPS（默认: false） | `true`/`false` |

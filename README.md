@@ -19,17 +19,17 @@ A Git LFS custom transfer agent for MinIO and AWS S3 compatible storage.
 
 #### Windows (PowerShell)
 ```powershell
-iwr -useb https://raw.githubusercontent.com/CruzLiu/LfsMinio/master/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/li-zhixin/LfsMinio/master/install.ps1 | iex
 ```
 
 #### Linux/macOS (Bash)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/CruzLiu/LfsMinio/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/li-zhixin/LfsMinio/master/install.sh | bash
 ```
 
 ### Manual Installation
 
-1. Download the latest release from [GitHub Releases](https://github.com/CruzLiu/LfsMinio/releases/latest)
+1. Download the latest release from [GitHub Releases](https://github.com/li-zhixin/LfsMinio/releases/latest)
 2. Extract to your preferred directory (e.g., `~/.lfs-mirror`)
 3. Add the directory to your system PATH
 
